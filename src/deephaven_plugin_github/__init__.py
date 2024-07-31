@@ -3,3 +3,4 @@ This is a plugin for Deephaven that provides a simple object that can send messa
 """
 
 from .deephaven_plugin_github_object import *
+from .gh import *
