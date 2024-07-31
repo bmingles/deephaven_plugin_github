@@ -1,28 +1,66 @@
-import json
-import os
+# define the status column order explicitly
+status_column_order = [
+  'No Status',
+  'New',
+  'Ready',
+  'In progress',
+  'In review',
+  'Done'
+]
 
-def debug_json_dump(file_name: str, content):
-    if not os.environ.get("DHGH_DEBUG_DUMP_PATH"):
-        return None
-    
-    file_path = get_debug_dump_file_path(file_name)
+def get_nested(obj, *keys):
+  result = obj
 
-    print(f"Dumping project items to {file_path}")
-    with open(file_path, "w") as outfile:
-        json.dump(content, outfile, indent=2)
+  for k in keys:
+    if result is None or k not in result:
+      return None
 
-def get_debug_dump_dir() -> str:
-    dir_path = os.environ.get("DHGH_DEBUG_DUMP_PATH")
-    if dir_path == None:
-        return None
-    
-    dir_path = dir_path + os.sep + ".debug"
-    
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-    
-    return dir_path
+    result = result[k]
 
-def get_debug_dump_file_path(file_name: str) -> str:
-    dir = get_debug_dump_dir()
-    return dir + os.sep + file_name if dir else None
+  return result
+
+def get_assignee(item):
+  assignees = get_nested(item, 'content', 'assignees', 'nodes') or []
+
+  if len(assignees) == 0:
+    return None
+
+  return assignees[0]['login']
+
+def get_issue_type(item):
+  return get_nested(item, 'content', '__typename') or print(item)
+
+def get_milestone(item):
+  return get_nested(item, 'content', 'milestone', 'title') or 'None'
+
+def get_number(item):
+  return get_nested(item, 'content', 'number') or None
+
+def get_repo_name(item):
+  return get_nested(item, 'content', 'repository', 'name')
+
+def get_sprint(item):
+  for field_value in item["fieldValues"]["nodes"]:
+    if 'field' in field_value and field_value['field']['name'] == 'Sprint':
+      return field_value['title']
+
+def get_status(field_values):
+  for field_value in field_values:
+    if 'field' in field_value and field_value['field']['name'] == 'Status':
+      return field_value['name']
+
+  return 'No Status'
+
+def get_title(item):
+  # TODO: look for title in fieldValues if not in content
+  title = get_nested(item, 'content', 'title')
+
+  if title:
+    return title
+  
+  field_values = get_nested(item, 'fieldValues', 'nodes')
+  for field_value in field_values:
+    if 'field' in field_value and field_value['field']['name'] == 'Title':
+      return field_value['text']
+
+  return None

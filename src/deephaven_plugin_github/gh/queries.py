@@ -1,6 +1,6 @@
 import os
 import requests
-from .util import debug_json_dump
+from .debug import debug_json_dump
 
 def create_project_items_query(project_id: str) -> str:
   prefix = """
@@ -201,7 +201,7 @@ query{
 def get_token():
     return os.environ["GH_PROJECT_TOKEN"]
 
-def query_project_items(project_id: str, debug=False) -> str:
+def query_project_items(project_id: str) -> str:
     # query = query_project_items_template.format(project_id)
     query = create_project_items_query(project_id)
 
