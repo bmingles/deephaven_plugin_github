@@ -2,3 +2,5 @@ build
 pip
 setuptools
 tox
+deephaven-server
+deephaven-plugin-ui
