@@ -2,6 +2,20 @@ import os
 import requests
 from .debug import debug_json_dump
 
+def create_projects_query(org_id: str) -> str:
+  prefix = """query {
+    organization(login: \""""
+    
+  suffix = """\"){
+      projectV2(number: 10) {
+        id
+        title
+      }
+    }
+  }"""
+
+  return prefix + org_id + suffix
+
 def create_project_items_query(project_id: str) -> str:
   prefix = """
 query{
@@ -201,15 +215,35 @@ query{
 def get_token():
     return os.environ["GH_PROJECT_TOKEN"]
 
-def query_project_items(project_id: str) -> str:
-    # query = query_project_items_template.format(project_id)
-    query = create_project_items_query(project_id)
+def query_graphql_api(query: str):
+  gh_project_token = get_token()
+  gh_headers = {"Authorization": f"BEARER {gh_project_token}"}
+  return requests.post('https://api.github.com/graphql', json={'query': query}, headers=gh_headers)
 
-    gh_project_token = get_token()
-    gh_headers = {"Authorization": f"BEARER {gh_project_token}"}
-    gh_response = requests.post('https://api.github.com/graphql', json={'query': query}, headers=gh_headers)
+def query_projects(org_id: str):
+    query = create_projects_query(org_id)
+    gh_response = query_graphql_api(query)
+
+    # TODO: Figure out why only 1 project is returned
+    project = {}
+    if gh_response.status_code == 200:
+        project = gh_response.json()['data']['organization']['projectV2']
+
+    debug_json_dump("projects.json", project)
+
+    return project
+
+def query_project_items(org_id: str):
+    project = query_projects(org_id)
 
     items = []
+    if not project:
+        return items
+
+    # query = query_project_items_template.format(project_id)
+    query = create_project_items_query(project['id'])
+    gh_response = query_graphql_api(query)
+
     if gh_response.status_code == 200:
         items = gh_response.json()['data']['node']['items']['nodes']
 

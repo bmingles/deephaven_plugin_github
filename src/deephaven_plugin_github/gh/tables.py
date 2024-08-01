@@ -1,4 +1,5 @@
 from deephaven import new_table
+from deephaven.table import Table
 from deephaven.column import double_col, string_col
 from .queries import query_project_items
 from .util import (
@@ -13,7 +14,7 @@ from .util import (
     status_column_order,
 )
 
-def issues_table(project_id):
+def issues_table(project_id) -> Table:
     items = query_project_items(project_id)
 
     number_col_values = []
@@ -59,3 +60,16 @@ def issues_table(project_id):
         ])
 
     return table
+
+def assignees_table(org_id: str) -> Table:
+    issues = issues_table(org_id)
+
+    return issues.select_distinct(
+        "Assignee"
+    ).where(
+        "Assignee != null"
+    ).view(
+        "Assignee"
+    ).sort(
+        "Assignee"
+    )

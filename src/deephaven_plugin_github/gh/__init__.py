@@ -1,4 +1,4 @@
-from .issues import issues_table
+from .tables import assignees_table, issues_table
 from .queries import query_project_items
 from .debug import (
     debug_json_dump,
@@ -19,6 +19,7 @@ from .util import (
 )
 
 __all__ = [
+    "assignees_table",
     "debug_json_dump",
     "get_assignee",
     "get_debug_dump_dir", 
