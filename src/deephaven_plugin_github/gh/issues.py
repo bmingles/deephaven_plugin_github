@@ -1,4 +1,4 @@
-from deephaven import ui, new_table
+from deephaven import new_table
 from deephaven.column import double_col, string_col
 from .queries import query_project_items
 from .util import (
@@ -13,8 +13,7 @@ from .util import (
     status_column_order,
 )
 
-@ui.component
-def issues(project_id):
+def issues_table(project_id):
     items = query_project_items(project_id)
 
     number_col_values = []

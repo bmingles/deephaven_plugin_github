@@ -1,4 +1,4 @@
-from .issues import issues
+from .issues import issues_table
 from .queries import query_project_items
 from .debug import (
     debug_json_dump,
@@ -31,7 +31,7 @@ __all__ = [
     "get_sprint",
     "get_status",
     "get_title",
-    "issues", 
+    "issues_table", 
     "query_project_items",
     "status_column_order",
 ]
