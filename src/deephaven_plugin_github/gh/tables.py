@@ -14,8 +14,8 @@ from .util import (
     status_column_order,
 )
 
-def issues_table(project_id) -> Table:
-    items = query_project_items(project_id)
+def issues_table(project_id, project_title: str | None = None) -> Table:
+    items = query_project_items(project_id, project_title)
 
     number_col_values = []
     title_col_values = []
@@ -46,23 +46,21 @@ def issues_table(project_id) -> Table:
 
         status_col_values.append(status)
 
-        table = new_table([
-            string_col("Repo", repo_col_values),
-            string_col("Sprint", sprint_values),
-            string_col("Milestone", milestone_column_values),
-            string_col("Status", status_col_values),
-            string_col("Assignee", assignee_col_values),
-            string_col("Issue_Type", issue_type_col_values),
-            double_col("Issue", number_col_values),
-            string_col("Title", title_col_values)
-        ]).format_columns(["Issue = Decimal(`#`)"]).sort([
-            "Repo", "Issue_Type", "Sprint", "Milestone", "Status" #, "Assignee"
-        ])
+    return new_table([
+        string_col("Repo", repo_col_values),
+        string_col("Sprint", sprint_values),
+        string_col("Milestone", milestone_column_values),
+        string_col("Status", status_col_values),
+        string_col("Assignee", assignee_col_values),
+        string_col("Issue_Type", issue_type_col_values),
+        double_col("Issue", number_col_values),
+        string_col("Title", title_col_values)
+    ]).format_columns(["Issue = Decimal(`#`)"]).sort([
+        "Repo", "Issue_Type", "Sprint", "Milestone", "Status" #, "Assignee"
+    ])
 
-    return table
-
-def assignees_table(org_id: str) -> Table:
-    issues = issues_table(org_id)
+def assignees_table(org_id: str, project_title: str | None = None) -> Table:
+    issues = issues_table(org_id, project_title)
 
     return issues.select_distinct(
         "Assignee"

@@ -7,9 +7,15 @@ def create_projects_query(org_id: str) -> str:
     organization(login: \""""
     
   suffix = """\"){
-      projectV2(number: 10) {
+      projectV2(number: 1) {
         id
         title
+      }
+      projectsV2(first: 10){
+        nodes {
+          id
+          title
+        }
       }
     }
   }"""
@@ -220,21 +226,29 @@ def query_graphql_api(query: str):
   gh_headers = {"Authorization": f"BEARER {gh_project_token}"}
   return requests.post('https://api.github.com/graphql', json={'query': query}, headers=gh_headers)
 
-def query_projects(org_id: str):
+def query_project(org_id: str, project_title: str | None = None):
     query = create_projects_query(org_id)
     gh_response = query_graphql_api(query)
 
-    # TODO: Figure out why only 1 project is returned
-    project = {}
+    project = None
     if gh_response.status_code == 200:
-        project = gh_response.json()['data']['organization']['projectV2']
+        org = gh_response.json()['data']['organization']
+
+        if project_title is None:
+          project = org['projectV2']
+        else:
+          projects = org['projectsV2']['nodes']
+          for p in projects:
+              if p['title'] == project_title:
+                  project = p
+                  break
 
     debug_json_dump("projects.json", project)
 
     return project
 
-def query_project_items(org_id: str):
-    project = query_projects(org_id)
+def query_project_items(org_id: str, project_title: str | None = None):
+    project = query_project(org_id, project_title)
 
     items = []
     if not project:
