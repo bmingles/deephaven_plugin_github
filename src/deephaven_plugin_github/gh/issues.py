@@ -16,7 +16,6 @@ from .util import (
 @ui.component
 def issues(project_id):
     items = query_project_items(project_id)
-    print(len(items))
 
     number_col_values = []
     title_col_values = []
