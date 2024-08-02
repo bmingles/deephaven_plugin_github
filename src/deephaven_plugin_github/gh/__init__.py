@@ -1,11 +1,11 @@
 from .tables import (
+    issues_table,
     project_issues_table,
-    prs_table
 )
 from .queries import (
+    query_issues,
     query_project,
     query_project_items, 
-    query_prs
 )
 from .debug import (
     debug_json_dump,
@@ -38,10 +38,10 @@ __all__ = [
     "get_sprint",
     "get_status",
     "get_title",
+    "issues_table",
     "project_issues_table",
-    "prs_table",
+    "query_issues",
     "query_project",
     "query_project_items",
-    "query_prs",
     "status_column_order",
 ]

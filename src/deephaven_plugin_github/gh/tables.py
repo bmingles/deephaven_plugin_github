@@ -2,8 +2,8 @@ from deephaven import new_table
 from deephaven.table import Table
 from deephaven.column import double_col, string_col
 from .queries import (
+    query_issues,
     query_project_items,
-    query_prs
 )
 from .util import (
     get_issue_type,
@@ -77,9 +77,10 @@ def distinct_defined_sorted(table: Table, col_name: str) -> Table:
         col_name
     )
 
-def prs_table(query: str) -> tuple[Table, Table]:
-    edges = query_prs(query)
+def issues_table(query: str, count=100) -> tuple[Table, Table]:
+    edges = query_issues(query, count)
 
+    issue_type_col_values = []
     number_col_values = []
     title_col_values = []
     author_col_values = []
@@ -87,19 +88,27 @@ def prs_table(query: str) -> tuple[Table, Table]:
     created_at_col_values = []
     merged_at_col_values = []
     url_col_values = []
+    user_col_values = []
 
     for edge in edges:
         node = edge['node']
 
+        issue_type_col_values.append(node['__typename'])
         number_col_values.append(node['number'])
         title_col_values.append(node['title'])
         author_col_values.append(node['author']['login'])
         repo_col_values.append(node['repository']['nameWithOwner'])
         created_at_col_values.append(node['createdAt'])
-        merged_at_col_values.append(node['mergedAt'])
+        merged_at_col_values.append(node['mergedAt'] if 'mergedAt' in node else None)
         url_col_values.append(node['url'])
 
+        # Identify all users involved in the issue
+        user_col_values.append(node['author']['login'])
+        if 'assignee' in node:
+            user_col_values.append(node['assignee']['login'])
+
     prs = new_table([
+        string_col("Issue_Type", issue_type_col_values),
         string_col("Repo", repo_col_values),
         double_col("PR", number_col_values),
         string_col("Author", author_col_values),
@@ -111,6 +120,10 @@ def prs_table(query: str) -> tuple[Table, Table]:
         "Repo", "PR"
     ])
 
-    authors = distinct_defined_sorted(prs, "Author")
+    users = new_table([
+        string_col("User", user_col_values)
+    ])
+
+    distinct_users = distinct_defined_sorted(users, "User")
     
-    return prs, authors
+    return prs, distinct_users

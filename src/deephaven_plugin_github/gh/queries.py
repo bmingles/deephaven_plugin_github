@@ -218,16 +218,35 @@ query{
     }
 """
 
-def create_pr_search_query(query: str): 
-  prefix = """
-query {
-  search(query: \""""
-   
-  suffix = """ is:pr\", type: ISSUE, first: 100) {
+def create_issue_search_query(query: str, count=100) -> str:
+  prefix = "query { search("
+
+  params = f"query: \"{query}\", type: ISSUE, first: {count}"
+
+  suffix = """){
     issueCount
     edges {
       node {
+        ... on Issue {
+          __typename
+          number
+          title
+          author {
+            login
+          }
+          assignees(first: 5) {
+            nodes {
+              login
+            }
+          }
+          repository {
+            nameWithOwner
+          }
+          createdAt
+          url
+        }
         ... on PullRequest {
+          __typename
           number
           title
           author {
@@ -248,7 +267,7 @@ query {
   }
 }
 """
-  return prefix + query + suffix
+  return prefix + params + suffix
 
 def get_token():
     return os.environ["GH_PROJECT_TOKEN"]
@@ -297,14 +316,14 @@ def query_project_items(org_id: str, project_title: str | None = None):
 
     return items
 
-def query_prs(query: str):
-    query = create_pr_search_query(query)
+def query_issues(query: str, count=100):
+    query = create_issue_search_query(query, count)
     gh_response = query_graphql_api(query)
 
     prs = []
     if gh_response.status_code == 200:
         prs = gh_response.json()['data']['search']['edges']
 
-    debug_json_dump("prs.json", prs)
+    debug_json_dump("issues.json", prs)
 
     return prs
