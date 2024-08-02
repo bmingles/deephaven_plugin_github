@@ -17,7 +17,7 @@ from .util import (
     status_column_order,
 )
 
-def issues_table(project_id, project_title: str | None = None) -> Table:
+def project_issues_table(project_id, project_title: str | None = None) -> tuple[Table, Table]:
     items = query_project_items(project_id, project_title)
 
     number_col_values = []
@@ -49,7 +49,7 @@ def issues_table(project_id, project_title: str | None = None) -> Table:
 
         status_col_values.append(status)
 
-    return new_table([
+    issues = new_table([
         string_col("Repo", repo_col_values),
         string_col("Sprint", sprint_values),
         string_col("Milestone", milestone_column_values),
@@ -62,20 +62,22 @@ def issues_table(project_id, project_title: str | None = None) -> Table:
         "Repo", "Issue_Type", "Sprint", "Milestone", "Status" #, "Assignee"
     ])
 
-def assignees_table(org_id: str, project_title: str | None = None) -> Table:
-    issues = issues_table(org_id, project_title)
+    assignees = distinct_defined_sorted(issues, "Assignee")
 
-    return issues.select_distinct(
-        "Assignee"
+    return issues, assignees
+
+def distinct_defined_sorted(table: Table, col_name: str) -> Table:
+    return table.select_distinct(
+        col_name
     ).where(
-        "Assignee != null"
+        f"{col_name} != null"
     ).view(
-        "Assignee"
+        col_name
     ).sort(
-        "Assignee"
+        col_name
     )
 
-def prs_table(query: str) -> Table:
+def prs_table(query: str) -> tuple[Table, Table]:
     edges = query_prs(query)
 
     number_col_values = []
@@ -97,7 +99,7 @@ def prs_table(query: str) -> Table:
         merged_at_col_values.append(node['mergedAt'])
         url_col_values.append(node['url'])
 
-    return new_table([
+    prs = new_table([
         string_col("Repo", repo_col_values),
         double_col("PR", number_col_values),
         string_col("Author", author_col_values),
@@ -108,3 +110,7 @@ def prs_table(query: str) -> Table:
     ]).format_columns(["PR = Decimal(`#`)"]).sort([
         "Repo", "PR"
     ])
+
+    authors = distinct_defined_sorted(prs, "Author")
+    
+    return prs, authors

@@ -1,6 +1,5 @@
 from .tables import (
-    assignees_table,
-    issues_table,
+    project_issues_table,
     prs_table
 )
 from .queries import (
@@ -27,7 +26,6 @@ from .util import (
 )
 
 __all__ = [
-    "assignees_table",
     "debug_json_dump",
     "get_assignee",
     "get_debug_dump_dir", 
@@ -40,7 +38,7 @@ __all__ = [
     "get_sprint",
     "get_status",
     "get_title",
-    "issues_table",
+    "project_issues_table",
     "prs_table",
     "query_project",
     "query_project_items",
