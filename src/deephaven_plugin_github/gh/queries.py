@@ -219,6 +219,10 @@ query{
 """
 
 def create_issue_search_query(query: str, count=100) -> str:
+  # TODO: GH caps search api at 100. Will need to paginate if we want more
+  if count > 100:
+    count = 100
+
   prefix = "query { search("
 
   params = f"query: \"{query}\", type: ISSUE, first: {count}"
