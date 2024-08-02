@@ -1,7 +1,10 @@
 from deephaven import new_table
 from deephaven.table import Table
 from deephaven.column import double_col, string_col
-from .queries import query_project_items
+from .queries import (
+    query_project_items,
+    query_prs
+)
 from .util import (
     get_issue_type,
     get_repo_name,
@@ -71,3 +74,37 @@ def assignees_table(org_id: str, project_title: str | None = None) -> Table:
     ).sort(
         "Assignee"
     )
+
+def prs_table(query: str) -> Table:
+    edges = query_prs(query)
+
+    number_col_values = []
+    title_col_values = []
+    author_col_values = []
+    repo_col_values = []
+    created_at_col_values = []
+    merged_at_col_values = []
+    url_col_values = []
+
+    for edge in edges:
+        node = edge['node']
+
+        number_col_values.append(node['number'])
+        title_col_values.append(node['title'])
+        author_col_values.append(node['author']['login'])
+        repo_col_values.append(node['repository']['nameWithOwner'])
+        created_at_col_values.append(node['createdAt'])
+        merged_at_col_values.append(node['mergedAt'])
+        url_col_values.append(node['url'])
+
+    return new_table([
+        string_col("Repo", repo_col_values),
+        double_col("PR", number_col_values),
+        string_col("Author", author_col_values),
+        string_col("Title", title_col_values),
+        string_col("Created", created_at_col_values),
+        string_col("Merged", merged_at_col_values),
+        string_col("URL", url_col_values)
+    ]).format_columns(["PR = Decimal(`#`)"]).sort([
+        "Repo", "PR"
+    ])
